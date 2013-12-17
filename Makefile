@@ -78,3 +78,6 @@ serial.o: serial.c serial.h
 
 echo-version:
 	@echo $(VSN)
+
+compile:
+	rebar compile
