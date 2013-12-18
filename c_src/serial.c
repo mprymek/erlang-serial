@@ -77,6 +77,9 @@ THE SOFTWARE.
 #include <sys/param.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/socket.h>
+#include <ctype.h>
+#include <unistd.h>
 
 #include "serial.h"
 
@@ -176,7 +179,7 @@ void set_raw_tty_mode(int fd)
 
   ttymodes.c_oflag &= ~OPOST;      /* disable output processing */
 
-  /* roland /
+  /* roland */
   ttymodes.c_cflag |= CLOCAL;
 
 
@@ -261,7 +264,7 @@ void set_tbh_size(unsigned char buf[], int size)
 
 void tbh_write(int fd, unsigned char buf[], int buffsize)
 {
-  char header_buf[TBHSIZE];
+  unsigned char header_buf[TBHSIZE];
 
   Debug1("tbh_write: send message of size %d\r\n", buffsize);
 
@@ -273,34 +276,6 @@ void tbh_write(int fd, unsigned char buf[], int buffsize)
   write(fd,buf,buffsize);
 
   return;
-}
-
-/**********************************************************************
- * Name: tbh_read
- * Desc: Reads one message with two-byte-header, filling buffer.
- *       Returns the number of elements used in the buffer, or 0
- *       if the input file has been closed. 
- *
- */
-
-int tbh_read(int fd, unsigned char buf[], int buffsize)
-{
-  int remaining, msgsize;
-
-  if (read_at_least(fd,buf,TBHSIZE) != TBHSIZE) 
-    return 0;
-
-  remaining = get_tbh_size(buf);
-
-  Debug1("tbh_read: got message of size %d\r\n",remaining);
-
-  msgsize = read_at_least(fd, &buf[TBHSIZE],
-			  Min(remaining,(buffsize-TBHSIZE)));
-
-  if (msgsize == 0)
-    return 0;
-  else
-    return msgsize + TBHSIZE;
 }
 
 /**********************************************************************
@@ -329,6 +304,34 @@ int read_at_least(int fd, unsigned char buf[], int nr)
     }
 
   return nr_read;
+}
+
+/**********************************************************************
+ * Name: tbh_read
+ * Desc: Reads one message with two-byte-header, filling buffer.
+ *       Returns the number of elements used in the buffer, or 0
+ *       if the input file has been closed. 
+ *
+ */
+
+int tbh_read(int fd, unsigned char buf[], int buffsize)
+{
+  int remaining, msgsize;
+
+  if (read_at_least(fd,buf,TBHSIZE) != TBHSIZE) 
+    return 0;
+
+  remaining = get_tbh_size(buf);
+
+  Debug1("tbh_read: got message of size %d\r\n",remaining);
+
+  msgsize = read_at_least(fd, &buf[TBHSIZE],
+			  Min(remaining,(buffsize-TBHSIZE)));
+
+  if (msgsize == 0)
+    return 0;
+  else
+    return msgsize + TBHSIZE;
 }
 
 /**********************************************************************
@@ -361,7 +364,7 @@ void write_to_tty(int ttyfd, int fillfd, int totalsize, int buffsize,
 
 int Debug_Enabled = FALSE;
 
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
   int            ttyfd = -1;           /* terminal file descriptor */
   int            stdinfd;              /* user file descriptor     */
@@ -370,7 +373,7 @@ main(int argc, char *argv[])
   boolean        erlang=FALSE;         /* talking to erlang flag   */
   speed_t        in_speed=B9600;       /* default in speed         */
   speed_t        out_speed=B9600;      /* default out speed        */
-  char           ttyname[MAXPATHLEN];  /* terminal name            */
+  char  ttyname[MAXPATHLEN];  /* terminal name            */
 
   strcpy(ttyname,"/dev/ttyS0");
 
@@ -449,8 +452,6 @@ main(int argc, char *argv[])
 
   if (cbreak)
     {
-      sigset_t sig, savesig;
-
       /* Use non-cononical mode for input */
       set_raw_tty_mode(stdinfd);
       fprintf(stderr,"Entering non-canonical mode, exit with ---\n");
@@ -606,7 +607,7 @@ main(int argc, char *argv[])
 		    Debug("received OPEN ");
 		    /* Terminate string */
 		    buf[nr_read] = '\0';
-		    strcpy(ttyname,&buf[HEADERSIZE]);
+		    strcpy(ttyname, (char *) &buf[HEADERSIZE]);
 
 		  open:
 		    Debug1("opening %s \r\n",ttyname);
@@ -641,7 +642,7 @@ main(int argc, char *argv[])
 		    {
 		      int off;
  
-		      in_speed = get_speed(atoi(&buf[HEADERSIZE]));
+		      in_speed = get_speed(atoi((char *) &buf[HEADERSIZE]));
 
 		      /* Null-terminate string */
 		      buf[nr_read] = '\0';
@@ -651,7 +652,7 @@ main(int argc, char *argv[])
 			  isdigit(buf[off]) && (off < MAXLENGTH) ;
 			  off += 1);
 
-		      out_speed = get_speed(atoi(&buf[off]));
+		      out_speed = get_speed(atoi((char *) &buf[off]));
 
 		      Debug1("     raw SPEED %s\r\n",&buf[HEADERSIZE]);
 		      Debug2("received SPEED %ud %ud\r\n",
@@ -707,5 +708,5 @@ main(int argc, char *argv[])
   fprintf(stderr,"9600\t19200\t38400\n\t\t57600\t");
   fprintf(stderr,"115200\t230400\n");
 
-  exit(0);
+  return 0;
 }
