@@ -47,7 +47,7 @@ BEAM_FILES = $(patsubst src/%.erl, ebin/%.beam, $(ERL_FILES))
 
 ######################################################################
 
-all: priv/bin/serial $(BEAM_FILES)
+all: priv/bin/serial $(BEAM_FILES) compile
 
 install: all
 	@[ -n "$(DESTDIR)" ] || (echo "Set DESTDIR before running the install target."; false)
