@@ -336,7 +336,7 @@ void write_to_tty(int ttyfd, int fillfd, int totalsize, int buffsize,
 
 /**********************************************************************/
 
-int Debug_Enabled = FALSE;
+int Debug_Enabled = TRUE;
 
 int main(int argc, char *argv[])
 {
