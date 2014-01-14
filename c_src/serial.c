@@ -156,10 +156,11 @@ void set_raw_tty_mode(int fd)
   ttymodes.c_oflag = 0;
   ttymodes.c_lflag = ICANON;
 
+  tcflush(fd, TCIFLUSH);
 
   /* Apply changes */
 
-  if (tcsetattr(fd, TCSAFLUSH, &ttymodes) < 0)
+  if (tcsetattr(fd, TCSANOW, &ttymodes) < 0)
     {
       perror("tcsetattr");
       exit(1);
