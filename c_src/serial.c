@@ -431,7 +431,7 @@ int main(int argc, char *argv[])
 
   if (!erlang)
     {
-      ttyfd = open(ttyname,O_RDWR);
+      ttyfd = open(ttyname,O_RDWR | O_NOCTTY | O_NDELAY);
       if (!TtyOpen(ttyfd))
 	{
 	  fprintf(stderr,"Cannot open terminal %s for read and write\n",
