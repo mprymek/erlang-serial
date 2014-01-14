@@ -151,7 +151,7 @@ void set_raw_tty_mode(int fd)
     }
 
   /* Configure for raw mode (see man termios) */
-  ttymodes.c_flag = 115200 | CS8 | CLOCAL | CREAD;
+  ttymodes.c_cflag = 115200 | CS8 | CLOCAL | CREAD;
   ttymodes.c_iflag = IGNPAR | ICRNL;
   ttymodes.c_oflag = 0;
   ttymodes.c_lflag = ICANON;
