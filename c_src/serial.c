@@ -336,7 +336,7 @@ void write_to_tty(int ttyfd, int fillfd, int totalsize, int buffsize,
 
 /**********************************************************************/
 
-int Debug_Enabled = TRUE;
+int Debug_Enabled = FALSE;
 
 int main(int argc, char *argv[])
 {
@@ -556,6 +556,7 @@ int main(int argc, char *argv[])
 		    Debug("received SEND\r\n");
 		    if (TtyOpen(ttyfd))
 		      {
+            set_raw_tty_mode(ttyfd);
 			write_to_tty(ttyfd, stdinfd,
 				     get_tbh_size(buf) - COMMANDSIZE,
 				     nr_read - HEADERSIZE,
